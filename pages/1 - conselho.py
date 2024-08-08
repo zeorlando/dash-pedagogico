@@ -1,7 +1,14 @@
 import streamlit as st
 import pandas as pd
+import seaborn as sns
+import plotly.graph_objects as go
+import plotly.express as px
+import matplotlib.pyplot as plt
+
 
 from st_aggrid import AgGrid, JsCode
+
+col1, col2, col3, col4 = st.columns(4, gap='large')
 
 # AJUSTES DAS TABELAS
 notas = pd.read_csv('notas_atividades.csv', sep=';', encoding = 'iso-8859-1')
@@ -31,10 +38,13 @@ tab_turmas_alunos = tab_turmas_alunos[(tab_turmas_alunos['anoletivo_x'] == 2024)
                                       (tab_turmas_alunos['situacaoturma'] == 'A')]
 
 tab_notas_alunos = pd.merge(notas_ano_vigente, tab_turmas_alunos, how='inner', on=['rm', 'turma'])
-tab_notas_alunos = tab_notas_alunos[['rm', 'nome_x', 'anoletivo', 'curso', 'disciplina', 'turma', 'idatividade', 'bimestre', 'nota']]
+tab_notas_alunos = tab_notas_alunos[['rm', 'nome_x', 'anoletivo', 'curso', 'disciplina', 'turma', 
+                                     'idatividade', 'bimestre', 'nota']]
 tab_notas_alunos.rename(columns={'nome_x':'nome'}, inplace=True)
 
-tab_notas_pivot = tab_notas_alunos.pivot_table(index = ['rm', 'nome', 'turma', 'curso','disciplina', 'bimestre'], columns = ['idatividade'], values = 'nota')
+tab_notas_pivot = tab_notas_alunos.pivot_table(index = ['rm', 'nome', 'turma', 'curso','disciplina', 
+                                                        'bimestre'], 
+                                                        columns = ['idatividade'], values = 'nota')
 
 df_notas_trim = pd.DataFrame(tab_notas_pivot.to_records())
 
@@ -69,7 +79,8 @@ ingles_etapa1 = df_notas_trim[
 try:
     if len(ingles_etapa1) > 0:
         ingles_etapa1 = ingles_etapa1[['rm', 'nome', 'turma', 'disciplina', 'bimestre','AA1', 'DE', 'TE']]
-        ingles_etapa1['media'] = ((ingles_etapa1['AA1'] + ingles_etapa1['DE'] + ingles_etapa1['TE'])/2).round(2)
+        ingles_etapa1['media'] = ((ingles_etapa1['AA1'] + ingles_etapa1['DE'] + 
+                                   ingles_etapa1['TE'])/2).round(2)
     else:
         print('Nenhuma nota digitada ainda')
 except:
@@ -84,7 +95,8 @@ ingles_etapa2 = df_notas_trim[
 try:
     if len(ingles_etapa2) > 0:
         ingles_etapa2 = ingles_etapa2[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1','DE', 'TE']]
-        ingles_etapa2['media'] = ((ingles_etapa2['AA1'] + ingles_etapa2['DE'] + ingles_etapa2['TE'])/2).round(2)
+        ingles_etapa2['media'] = ((ingles_etapa2['AA1'] + ingles_etapa2['DE'] + 
+                                   ingles_etapa2['TE'])/2).round(2)
     else:
         print('Nenhuma nota digitada ainda')
 except:
@@ -165,7 +177,8 @@ try:
         (df_notas_trim['disciplina'] == 'HISTÓRIA/GEOGRAFIA') & 
         ((df_notas_trim['curso'] == '3° ANO EF'))]
     hisEgeo_etapa1 = hisEgeo_etapa1[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'DE', 'TE']]
-    hisEgeo_etapa1['media'] = ((hisEgeo_etapa1['AA1'] + hisEgeo_etapa1['DE'] + hisEgeo_etapa1['TE'])/2).round(2)
+    hisEgeo_etapa1['media'] = ((hisEgeo_etapa1['AA1'] + hisEgeo_etapa1['DE'] + 
+                                hisEgeo_etapa1['TE'])/2).round(2)
 except:
     print('Notas faltando')
 
@@ -177,7 +190,8 @@ try:
          (df_notas_trim['curso'] != '4° ANO EF') & 
          (df_notas_trim['curso'] != '5° ANO EF'))]
     lp_etapa2 = lp_etapa2[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'AA2','DE', 'TE']]
-    lp_etapa2['media'] = ((lp_etapa2['AA1'] + lp_etapa2['AA2'] + lp_etapa2['DE'] + lp_etapa2['TE'])/3).round(2)
+    lp_etapa2['media'] = ((lp_etapa2['AA1'] + lp_etapa2['AA2'] + lp_etapa2['DE'] + 
+                           lp_etapa2['TE'])/3).round(2)
 except:
     print('Notas faltando')
 
@@ -189,7 +203,8 @@ try:
         (df_notas_trim['curso'] != '4° ANO EF') & 
         (df_notas_trim['curso'] != '5° ANO EF')]
     mat_etapa2 = mat_etapa2[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'AA2','DE', 'TE']]
-    mat_etapa2['media'] = ((mat_etapa2['AA1'] + mat_etapa2['AA2'] + mat_etapa2['DE'] + mat_etapa2['TE'])/3).round(2)
+    mat_etapa2['media'] = ((mat_etapa2['AA1'] + mat_etapa2['AA2'] + mat_etapa2['DE'] + 
+                            mat_etapa2['TE'])/3).round(2)
 except:
     print('Notas faltando')
 
@@ -201,7 +216,8 @@ try:
         (df_notas_trim['curso'] != '4° ANO EF') & 
         (df_notas_trim['curso'] != '5° ANO EF')]
     cie_etapa2 = cie_etapa2[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'AA2','DE', 'TE']]
-    cie_etapa2['media'] = ((cie_etapa2['AA1'] + cie_etapa2['AA2'] + cie_etapa2['DE'] + cie_etapa2['TE'])/3).round(2)
+    cie_etapa2['media'] = ((cie_etapa2['AA1'] + cie_etapa2['AA2'] + cie_etapa2['DE'] + 
+                            cie_etapa2['TE'])/3).round(2)
 except:
     print('Notas faltando')
 
@@ -213,7 +229,8 @@ try:
         (df_notas_trim['curso'] != '4° ANO EF') & 
         (df_notas_trim['curso'] != '5° ANO EF')]
     geo_etapa2 = geo_etapa2[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'AA2','DE', 'TE']]
-    geo_etapa2['media'] = ((geo_etapa2['AA1'] + geo_etapa2['AA2'] + geo_etapa2['DE'] + geo_etapa2['TE'])/3).round(2)
+    geo_etapa2['media'] = ((geo_etapa2['AA1'] + geo_etapa2['AA2'] + geo_etapa2['DE'] + 
+                            geo_etapa2['TE'])/3).round(2)
 except:
     print('Notas faltando')
 
@@ -225,14 +242,18 @@ try:
         (df_notas_trim['curso'] != '4° ANO EF') & 
         (df_notas_trim['curso'] != '5° ANO EF')]
     his_etapa2 = his_etapa2[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'AA2','DE', 'TE']]
-    his_etapa2['media'] = ((his_etapa2['AA1'] + his_etapa2['AA2'] + his_etapa2['DE'] + his_etapa2['TE'])/3).round(2)
+    his_etapa2['media'] = ((his_etapa2['AA1'] + his_etapa2['AA2'] + his_etapa2['DE'] + 
+                            his_etapa2['TE'])/3).round(2)
 except:
     print('Notas faltando')
 
 # MONTAGEM DO DF FINAL
-disciplinas = [arte, ed_fisica, ingles_etapa1, ingles_etapa2, espanhol, lp_etapa1, mat_etapa1, cie_etapa1, geo_etapa1, his_etapa1, hisEgeo_etapa1, lp_etapa2, mat_etapa2, cie_etapa2, geo_etapa2, his_etapa2]
+disciplinas = [arte, ed_fisica, ingles_etapa1, ingles_etapa2, espanhol, lp_etapa1, 
+               mat_etapa1, cie_etapa1, geo_etapa1, his_etapa1, hisEgeo_etapa1, 
+               lp_etapa2, mat_etapa2, cie_etapa2, geo_etapa2, his_etapa2]
 tab_rec = pd.concat(disciplinas)
-analise_rec = tab_rec[['rm', 'nome', 'turma', 'disciplina', 'bimestre','media','AA1', 'AA2','TE', 'DE', 'TE ART', 'DE ART', 'PO', 'DE ED. FIS']]
+analise_rec = tab_rec[['rm', 'nome', 'turma', 'disciplina', 'bimestre','media','AA1', 'AA2',
+                       'TE', 'DE', 'TE ART', 'DE ART', 'PO', 'DE ED. FIS']]
 
 def arredondaMedia (analise_rec):
     decimal = round((analise_rec['media'] % 1),2)
@@ -248,7 +269,6 @@ def arredondaMedia (analise_rec):
 
 analise_rec['media'] = analise_rec.apply(arredondaMedia, axis = 1)
 analise_rec = analise_rec.rename(columns={'bimestre': 'trimestre'})
-
 
 tab_turmas_alunos_filtro_turma = tab_turmas_alunos[tab_turmas_alunos['turma'].str.contains('3|4|5|6|7|8|9')]
 tab_turmas_alunos_filtro_turma = tab_turmas_alunos_filtro_turma.sort_values(by=['turma'])
@@ -342,19 +362,86 @@ with st.sidebar:
 
 selecao = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) & 
                                 (medias_notas_processo['media'] > 0) &
-                                (medias_notas_processo['trimestre'].isin(trimestre))].sort_values(by=['turma_x','nome_x', 'disciplina'])
+                                (medias_notas_processo['trimestre'].isin(trimestre))].sort_values(
+                                    by=['turma_x','nome_x', 'disciplina'])
 
 selecao_media_parcial = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) &
                                               (medias_notas_processo['media'] > 0)]
 
-selecao = selecao.fillna(value='')
+selecao = selecao.fillna(value=-1)
+
+#função gera nova média
+def gera_nova_media(selecao):
+    nova_media = 0
+    if selecao['trimestre'] == 1:
+        if (selecao['T1mediaTRI'] < selecao['media']) | (selecao['T1mediaTRI'] == ''):
+            nova_media = selecao['media']
+        else: 
+            nova_media = selecao['T1mediaTRI']
+    elif selecao['trimestre'] == 2:
+        if (selecao['T2mediaTRI'] < selecao['media']) | (selecao['T2mediaTRI'] == ''):
+            nova_media = selecao['media']
+        else: 
+            nova_media = selecao['T2mediaTRI']
+    else:
+        if (selecao['T3mediaTRI'] < selecao['media']) | (selecao['T3mediaTRI'] == ''):
+            nova_media = selecao['media']
+        else: 
+            nova_media = selecao['T3mediaTRI']
+    return nova_media
+
+selecao['nova_media'] = selecao.apply(gera_nova_media, axis = 1)
+selecao['situacao'] = selecao['nova_media'].apply(lambda row: 'dentro da média' if row >=7 else 'abaixo da média') 
+
+# teste para ver como está saindo a planilha
+#selecao.to_excel('teste.xlsx')
 
 media_parcial_abaixo = selecao_media_parcial[selecao_media_parcial['mediaparcial'] < 7]
+devedores_nota = media_parcial_abaixo[['nome_x', 'turma_x', 'disciplina', 'mediaparcial']]
+devedores_nota = devedores_nota.rename(columns=
+                                       {
+                                           'nome_x':'Nome',
+                                           'turma_x' : 'Turma',
+                                           'disciplina' : 'Disciplina',
+                                           'mediaparcial' : 'Média Parcial'
+                                       })
 
 def gera_lista(coluna):
     return selecao[coluna].to_list()
 
 disciplinas_x = selecao['disciplina'].unique().tolist()
+
+lista_graph = []
+
+disciplina_graph = []
+for disc in range(len(disciplinas_x)):
+    graph_media_abaixo = selecao[(selecao['disciplina'] == disciplinas_x[disc]) & 
+                                 (selecao['nova_media'] < 7)]
+    if len(graph_media_abaixo) != 0:
+        nome_disc = disciplinas_x[disc]
+        disciplina_graph.append(nome_disc)
+
+select = selecao[selecao['disciplina'].isin(disciplina_graph)]
+
+abaixo_da_media = select[select['situacao'] == 'abaixo da média']
+dentro_da_media = select[select['situacao'] == 'dentro da média']
+df_situacao = pd.concat([abaixo_da_media, dentro_da_media])
+df_situacao = df_situacao.groupby(['disciplina', 'situacao']).count()
+lista_disciplinas = []
+lista_situacao = []
+for i in range(len(df_situacao.index)):
+    lista_disciplinas.append(df_situacao.index[i][0])
+    lista_situacao.append(df_situacao.index[i][1])
+
+df = pd.DataFrame({
+    'Disciplina':lista_disciplinas,
+    'Nº de alunos': df_situacao['rm'].values,
+    'Situação':lista_situacao
+})
+
+fig = px.bar(df, x='Disciplina', y='Nº de alunos', color='Situação', barmode='group', 
+             title='Disciplinas com alunos abaixo da média', color_discrete_sequence=["red", "blue"],)
+st.plotly_chart(fig)
 
 trimestres =  {
     1 : ['T1recup', 'T1mediaTRI', 'T1faltas'],
@@ -365,42 +452,69 @@ trimestres =  {
 def gera_fechamento_tri(disciplina, trimestre, media):
     if ((disciplina in disciplinas_x) & (media < 7)):
         lista_fechamento_tri = [
-            {'Atividades':'Rec', 'Nota':gera_lista(trimestres[trimestre][0])[i], 'Trimestre':gera_lista('trimestre')[i]}, 
-            {'Atividades':'Média Tri', 'Nota':gera_lista(trimestres[trimestre][1])[i],'Trimestre':gera_lista('trimestre')[i]},
-
+            {'Atividades':'Rec', 
+             'Nota':gera_lista(trimestres[trimestre][0])[i], 
+             'Trimestre':gera_lista('trimestre')[i]}, 
+            {'Atividades':'Média Tri', 
+             'Nota':gera_lista(trimestres[trimestre][1])[i],
+             'Trimestre':gera_lista('trimestre')[i]},
         ]
         return lista_fechamento_tri
     elif ((disciplina in disciplinas_x) & (media >= 7)):
         lista_fechamento_tri = [
-            {'Atividades':'Média Tri', 'Nota':gera_lista(trimestres[trimestre][1])[i],'Trimestre':gera_lista('trimestre')[i]},
+            {'Atividades':'Média Tri', 
+             'Nota':gera_lista(trimestres[trimestre][1])[i],
+             'Trimestre':gera_lista('trimestre')[i]},
         ]
         return lista_fechamento_tri
 
 def gera_atividades(disciplina):
         if (disciplina == 'ARTE'):
             lista_atividades = [
-                {'Atividades': 'TE ART', 'Nota': gera_lista('TE ART')[i], 'Trimestre':gera_lista('trimestre')[i]}, 
-                {'Atividades': 'DE ART', 'Nota': gera_lista('DE ART')[i], 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'TE ART', 
+                 'Nota': gera_lista('TE ART')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]}, 
+                {'Atividades': 'DE ART', 
+                 'Nota': gera_lista('DE ART')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
             ]
         elif (disciplina == 'EDUCAÇÃO FÍSICA'):
             lista_atividades = [
-                {'Atividades': 'DE ED. FÍS', 'Nota': gera_lista('DE ED. FIS')[i], 'Trimestre':gera_lista('trimestre')[i]},
-                {'Atividades': 'PO', 'Nota': gera_lista('PO')[i], 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'DE ED. FÍS', 
+                 'Nota': gera_lista('DE ED. FIS')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'PO', 
+                 'Nota': gera_lista('PO')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
             ]
         elif ((disciplina == 'INGLÊS') | 
               (disciplina == 'ESPANHOL') | 
               (selecao['turma_x'].str.contains('3|4|5'))).any():
             lista_atividades = [
-                {'Atividades': 'AA1', 'Nota': gera_lista('AA1')[i], 'Trimestre':gera_lista('trimestre')[i]},
-                {'Atividades': 'TE', 'Nota': gera_lista('TE')[i], 'Trimestre':gera_lista('trimestre')[i]},
-                {'Atividades': 'DE', 'Nota': gera_lista('DE')[i], 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'AA1', 
+                 'Nota': gera_lista('AA1')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'TE', 
+                 'Nota': gera_lista('TE')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'DE', 
+                 'Nota': gera_lista('DE')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
             ]
         else:
             lista_atividades = [
-                {'Atividades': 'AA1', 'Nota': gera_lista('AA1')[i], 'Trimestre':gera_lista('trimestre')[i]},
-                {'Atividades': 'AA2', 'Nota': gera_lista('AA2')[i], 'Trimestre':gera_lista('trimestre')[i]},
-                {'Atividades': 'TE', 'Nota': gera_lista('TE')[i], 'Trimestre':gera_lista('trimestre')[i]},
-                {'Atividades': 'DE', 'Nota': gera_lista('DE')[i],'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'AA1', 
+                 'Nota': gera_lista('AA1')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'AA2', 
+                 'Nota': gera_lista('AA2')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'TE', 
+                 'Nota': gera_lista('TE')[i], 
+                 'Trimestre':gera_lista('trimestre')[i]},
+                {'Atividades': 'DE', 
+                 'Nota': gera_lista('DE')[i],
+                 'Trimestre':gera_lista('trimestre')[i]},
             ]
         return lista_atividades
 
@@ -410,7 +524,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
-                'Média': gera_lista('media')[i],
+                'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
                 'callRecords': gera_atividades(gera_lista('disciplina')[i]) + 
@@ -423,7 +537,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
-                'Média': gera_lista('media')[i],
+                'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
                 'callRecords': gera_atividades(gera_lista('disciplina')[i]) + 
@@ -439,7 +553,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
-                'Média': gera_lista('media')[i],
+                'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
                 'callRecords': gera_atividades(gera_lista('disciplina')[i]) +
@@ -452,7 +566,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
-                'Média': gera_lista('media')[i],
+                'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
                 'callRecords':gera_atividades(gera_lista('disciplina')[i]) + 
@@ -480,9 +594,18 @@ gridOptions = {
             'field': 'Nome',
             'cellRenderer': 'agGroupCellRenderer',
         },
-        {'field': 'Disciplina'},
-        {'field': 'Média', 'cellStyle': js_code_style, 'type':"numberColumnFilter"},
-        {'field':'Trimestre', 'type':"numberColumnFilter"}
+        {
+            'field': 'Disciplina'
+        },
+        {
+            'field': 'Média', 
+            'cellStyle': js_code_style, 
+            'type':"numberColumnFilter"
+        },
+        {
+            'field':'Trimestre', 
+            'type':"numberColumnFilter"
+        }
     ],
     'detailCellRendererParams': {
         'detailGridOptions': {
@@ -509,4 +632,4 @@ AgGrid(
 
 st.html('<h2>Alunos que estão devendo nota</h2>')
 
-st.dataframe(media_parcial_abaixo[['nome_x', 'turma_x', 'disciplina', 'mediaparcial']], hide_index = True)
+st.dataframe(devedores_nota.sort_values(by=['Nome', 'Disciplina']), hide_index = True)
