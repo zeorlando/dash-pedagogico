@@ -1,22 +1,12 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import plotly.graph_objects as go
 import plotly.express as px
-import matplotlib.pyplot as plt
-
 
 from st_aggrid import AgGrid, JsCode
 
 col1, col2, col3, col4 = st.columns(4, gap='large')
 
 # AJUSTES DAS TABELAS
-notas = pd.read_csv('notas_atividades.csv', sep=';', encoding = 'iso-8859-1')
-notas['rm'] = notas['rm'].astype(int)
-notas['anoletivo'] = notas['anoletivo'].astype(int)
-notas_ano_vigente = notas[(notas['anoletivo'] == 2024)]
-notas_ano_vigente.to_csv('notas_ano_vigente.csv', sep=';', encoding = 'iso-8859-1', index = False)
-
 alunos = pd.read_csv('alunos.csv', sep=';', encoding = 'iso-8859-1')
 alunos.dropna(subset=["anoletivo"], inplace=True)
 alunos['rm'] = alunos['rm'].astype(int)
@@ -26,6 +16,7 @@ alunos = alunos[['rm','nome', 'idturma','status', 'situacaoturma', 'anoletivo']]
 alunos = alunos[(alunos['status'] == 'A') & 
                 (alunos['situacaoturma'] == 'A') & 
                 (alunos['anoletivo'] == 2024)]
+lista_rm = alunos['rm'].unique().tolist()
 
 turmas = pd.read_csv('turmas.csv', sep=";", encoding='iso-8859-1')
 turmas['idturma'] = turmas['idturma'].astype(int)
@@ -36,6 +27,15 @@ tab_turmas_alunos.rename(columns={'descrturma':'turma'}, inplace=True)
 tab_turmas_alunos = tab_turmas_alunos[(tab_turmas_alunos['anoletivo_x'] == 2024) &
                                       (tab_turmas_alunos['status'] == 'A') &
                                       (tab_turmas_alunos['situacaoturma'] == 'A')]
+lista_turmas = tab_turmas_alunos['turma'].unique().tolist()
+
+notas = pd.read_csv('notas_atividades.csv', sep=';', encoding = 'iso-8859-1')
+notas['rm'] = notas['rm'].astype(int)
+notas['anoletivo'] = notas['anoletivo'].astype(int)
+notas_ano_vigente = notas[(notas['anoletivo'] == 2024) & 
+                          (notas['rm'].isin(lista_rm)) & 
+                          (notas['turma'].isin(lista_turmas))]
+notas_ano_vigente.to_csv('notas_ano_vigente.csv', sep=';', encoding = 'iso-8859-1', index = False)
 
 tab_notas_alunos = pd.merge(notas_ano_vigente, tab_turmas_alunos, how='inner', on=['rm', 'turma'])
 tab_notas_alunos = tab_notas_alunos[['rm', 'nome_x', 'anoletivo', 'curso', 'disciplina', 'turma', 
@@ -58,6 +58,7 @@ try:
         print('Nenhuma nota digitada ainda')
 except:
     print('Notas faltando')
+
 
 # ED.FÍSICA
 ed_fisica = df_notas_trim[df_notas_trim['disciplina'] == 'EDUCAÇÃO FÍSICA']
@@ -306,8 +307,9 @@ medias_boletim['B3mediabim'] = medias_boletim['B3mediabim'].astype(float)
 medias_boletim['mediaparcial'] = medias_boletim['mediaparcial'].str.replace(',', '.')
 medias_boletim['mediaparcial'] = medias_boletim['mediaparcial'].astype(float)
 
+medias_boletim.to_csv('medias_v2.csv', sep=';', encoding = 'iso-8859-1', index = False)
 
-medias = medias_boletim[medias_boletim["anoletivo"] == 2024]
+medias = medias_boletim[medias_boletim["anoletivo"]==2024]
 
 turmas_descricao = df_notas_trim[['rm', 'turma']].drop_duplicates()
 
@@ -346,7 +348,9 @@ medias_notas_processo.to_csv('notas.csv', sep=';', encoding = 'iso-8859-1', inde
 medias_notas_processo = medias_notas_processo[colunas_usadas]
 
 # VERIFICA NOTAS FALTANTES
-#medias_notas_processo[medias_notas_processo['media'].isna()]
+# vazio = medias_notas_processo[medias_notas_processo['media'].isna()]
+# vazio.to_excel('vazio.xlsx')
+
 
 # BARRA DE FILTROS PRINCIPAIS
 with st.sidebar:
@@ -360,6 +364,13 @@ with st.sidebar:
         medias_notas_processo['trimestre'].unique()
     )
 
+# nota_TE = round(medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
+#                                 (medias_notas_processo['turma_x'].isin(turma))]['TE'].mean(),2)
+# st.write('TE',nota_TE)
+# nota_AA1 = nota_TE = round(medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
+#                                 (medias_notas_processo['turma_x'].isin(turma))]['AA1'].mean(),2)
+# st.write('AA1',nota_AA1)
+
 selecao = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) & 
                                 (medias_notas_processo['media'] > 0) &
                                 (medias_notas_processo['trimestre'].isin(trimestre))].sort_values(
@@ -368,7 +379,9 @@ selecao = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) &
 selecao_media_parcial = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) &
                                               (medias_notas_processo['media'] > 0)]
 
+
 selecao = selecao.fillna(value=-1)
+
 
 #função gera nova média
 def gera_nova_media(selecao):
@@ -396,7 +409,8 @@ selecao['situacao'] = selecao['nova_media'].apply(lambda row: 'dentro da média'
 # teste para ver como está saindo a planilha
 #selecao.to_excel('teste.xlsx')
 
-media_parcial_abaixo = selecao_media_parcial[selecao_media_parcial['mediaparcial'] < 7]
+media_parcial_abaixo = selecao_media_parcial[(selecao_media_parcial['mediaparcial'] < 7) &
+                                             (selecao_media_parcial['trimestre'] == 1)]
 devedores_nota = media_parcial_abaixo[['nome_x', 'turma_x', 'disciplina', 'mediaparcial']]
 devedores_nota = devedores_nota.rename(columns=
                                        {
@@ -406,17 +420,17 @@ devedores_nota = devedores_nota.rename(columns=
                                            'mediaparcial' : 'Média Parcial'
                                        })
 
+
 def gera_lista(coluna):
     return selecao[coluna].to_list()
 
 disciplinas_x = selecao['disciplina'].unique().tolist()
 
 lista_graph = []
-
 disciplina_graph = []
 for disc in range(len(disciplinas_x)):
-    graph_media_abaixo = selecao[(selecao['disciplina'] == disciplinas_x[disc]) & 
-                                 (selecao['nova_media'] < 7)]
+    graph_media_abaixo = selecao[(selecao['disciplina'] == disciplinas_x[disc]) &
+                                 (selecao['nova_media'] < 7)] #essa condição trás somente disciplinas onde haja alunos com média < 7
     if len(graph_media_abaixo) != 0:
         nome_disc = disciplinas_x[disc]
         disciplina_graph.append(nome_disc)
@@ -440,7 +454,7 @@ df = pd.DataFrame({
 })
 
 fig = px.bar(df, x='Disciplina', y='Nº de alunos', color='Situação', barmode='group', 
-             title='Disciplinas com alunos abaixo da média', color_discrete_sequence=["red", "blue"],)
+            title='Disciplinas com alunos abaixo da média', color_discrete_sequence=["red", "blue"],)
 st.plotly_chart(fig)
 
 trimestres =  {

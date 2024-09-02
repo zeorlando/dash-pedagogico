@@ -29,6 +29,14 @@ if button_load_files:
     query_turmas = pd.read_sql_query('SELECT * FROM viewturmas', conn)
     turmas = pd.DataFrame(query_turmas)
     turmas.to_csv('turmas.csv', sep=';', encoding = 'iso-8859-1', index = False)
+
+    query_turmas_atividades = pd.read_sql_query('SELECT * FROM vwturmasdisciplinasativ', conn)
+    turmas_atividades = pd.DataFrame(query_turmas_atividades)
+    turmas_atividades.to_csv('turmas_atividades.csv', sep=';', encoding = 'iso-8859-1', index = False)
+
+    query_disciplinas = pd.read_sql_query('SELECT * FROM vwdisciplina', conn)
+    disciplinas = pd.DataFrame(query_disciplinas)
+    disciplinas.to_csv('disciplinas.csv', sep=';', encoding = 'iso-8859-1', index = False)
     
     conn.close()
     db.dispose()
