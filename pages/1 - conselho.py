@@ -347,10 +347,6 @@ medias_notas_processo.to_csv('notas.csv', sep=';', encoding = 'iso-8859-1', inde
 
 medias_notas_processo = medias_notas_processo[colunas_usadas]
 
-# VERIFICA NOTAS FALTANTES
-# vazio = medias_notas_processo[medias_notas_processo['media'].isna()]
-# vazio.to_excel('vazio.xlsx')
-
 
 # BARRA DE FILTROS PRINCIPAIS
 with st.sidebar:
@@ -364,12 +360,33 @@ with st.sidebar:
         medias_notas_processo['trimestre'].unique()
     )
 
+#VERIFICA NOTAS FALTANTES
+vazio = medias_notas_processo[medias_notas_processo['media'].isna()]
+vazio = vazio[(vazio['turma_x'].isin(turma)) & 
+              (vazio['trimestre'].isin(trimestre))].sort_values(by=['turma_x','disciplina','nome_x'])
+vazio = vazio.rename(columns=
+                     {'nome_x': 'Nome',
+                     'turma_x': 'Turma',
+                     'disciplina': 'Disciplina'}
+                    )
+qtd_alunos = len(vazio['rm'].unique())
+qtd_disciplinas = len(vazio['Disciplina'].unique())
+if len(vazio) > 0:
+    st.html(f'<p>Há <b>{qtd_alunos} aluno(s)</b> com alguma nota sem digitar em <b>{qtd_disciplinas} disciplina(s)</b></p>')
+    st.dataframe(vazio[['Nome','Turma', 'Disciplina', 'trimestre']], hide_index=True, width=700)
+
 # nota_TE = round(medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
-#                                 (medias_notas_processo['turma_x'].isin(turma))]['TE'].mean(),2)
-# st.write('TE',nota_TE)
+#                                 (medias_notas_processo['turma_x'].isin(turma))]['TE'].mode(),2)
 # nota_AA1 = nota_TE = round(medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
-#                                 (medias_notas_processo['turma_x'].isin(turma))]['AA1'].mean(),2)
-# st.write('AA1',nota_AA1)
+#                                 (medias_cd dadonotas_processo['turma_x'].isin(turma))]['AA1'].mode(),2)
+
+# a = medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
+#                                 (medias_notas_processo['turma_x'].isin(turma))]['TE'].mode()
+# a
+# b = medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
+#                                 (medias_notas_processo['turma_x'].isin(turma))]['AA1'].mode()
+# b
+
 
 selecao = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) & 
                                 (medias_notas_processo['media'] > 0) &
@@ -538,6 +555,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
+                'Turma': gera_lista('turma_x')[i],
                 'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
@@ -551,6 +569,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
+                'Turma': gera_lista('turma_x')[i],
                 'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
@@ -567,6 +586,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
+                'Turma': gera_lista('turma_x')[i],
                 'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
@@ -580,6 +600,7 @@ for i in range(len(selecao)):
         data.append(
             {
                 'Nome':gera_lista('nome_x')[i],
+                'Turma': gera_lista('turma_x')[i],
                 'Média': gera_lista('nova_media')[i],
                 'Disciplina':gera_lista('disciplina')[i],
                 'Trimestre':gera_lista('trimestre')[i],
@@ -607,6 +628,9 @@ gridOptions = {
         {
             'field': 'Nome',
             'cellRenderer': 'agGroupCellRenderer',
+        },
+        {
+            'field': 'Turma'
         },
         {
             'field': 'Disciplina'
@@ -642,8 +666,9 @@ AgGrid(
     None,
     gridOptions=gridOptions,
     allow_unsafe_jscode=True,
+    fit_columns_on_grid_load=True,
 )
 
-st.html('<h2>Alunos que estão devendo nota</h2>')
+st.html('<h3>Alunos em situação crítica</h3>')
 
-st.dataframe(devedores_nota.sort_values(by=['Nome', 'Disciplina']), hide_index = True)
+st.dataframe(devedores_nota.sort_values(by=['Nome', 'Disciplina']), hide_index = True, width=700)
