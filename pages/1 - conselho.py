@@ -399,6 +399,24 @@ selecao_media_parcial = medias_notas_processo[(medias_notas_processo['turma_x'].
 
 selecao = selecao.fillna(value=-1)
 
+rec_vazia = selecao[((selecao['T1recup'] == -1) & (selecao['T1mediaTRI'] < 7) & (selecao['trimestre'] == 1)) |
+                    ((selecao['T2recup'] == -1) & (selecao['T2mediaTRI'] < 7) & (selecao['trimestre'] == 2)) |
+                    ((selecao['T3recup'] == -1) & (selecao['T3mediaTRI'] < 7) & (selecao['trimestre'] == 3))]
+
+colunas = {
+    'nome_x':'Nome',
+    'turma_x':'Turma',
+    'disciplina':'Disciplina',
+    'trimestre':'Trimestre'
+}
+
+rec_vazia = rec_vazia.rename(columns=colunas)
+
+rec_vazia = rec_vazia.sort_values(by=['Trimestre','Turma', 'Nome', 'Disciplina'])
+
+if (len(rec_vazia) > 0):
+    st.html('<h3>Alunos com REC em aberto</h3>')
+    st.dataframe(rec_vazia[['Nome', 'Turma', 'Disciplina', 'Trimestre']], hide_index=True, width=700)
 
 #função gera nova média
 def gera_nova_media(selecao):
