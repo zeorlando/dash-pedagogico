@@ -15,7 +15,7 @@ alunos['anoletivo'] = alunos['anoletivo'].astype(int)
 alunos = alunos[['rm','nome', 'idturma','status', 'situacaoturma', 'anoletivo']]
 alunos = alunos[(alunos['status'] == 'A') & 
                 (alunos['situacaoturma'] == 'A') & 
-                (alunos['anoletivo'] == 2024)]
+                (alunos['anoletivo'] == 2025)]
 lista_rm = alunos['rm'].unique().tolist()
 
 turmas = pd.read_csv('turmas.csv', sep=";", encoding='iso-8859-1')
@@ -24,7 +24,7 @@ turmas['anoletivo'] = turmas['anoletivo'].astype(int)
 
 tab_turmas_alunos = pd.merge(alunos, turmas, how='inner', on='idturma')
 tab_turmas_alunos.rename(columns={'descrturma':'turma'}, inplace=True)
-tab_turmas_alunos = tab_turmas_alunos[(tab_turmas_alunos['anoletivo_x'] == 2024) &
+tab_turmas_alunos = tab_turmas_alunos[(tab_turmas_alunos['anoletivo_x'] == 2025) &
                                       (tab_turmas_alunos['status'] == 'A') &
                                       (tab_turmas_alunos['situacaoturma'] == 'A')]
 lista_turmas = tab_turmas_alunos['turma'].unique().tolist()
@@ -32,7 +32,7 @@ lista_turmas = tab_turmas_alunos['turma'].unique().tolist()
 notas = pd.read_csv('notas_atividades.csv', sep=';', encoding = 'iso-8859-1')
 notas['rm'] = notas['rm'].astype(int)
 notas['anoletivo'] = notas['anoletivo'].astype(int)
-notas_ano_vigente = notas[(notas['anoletivo'] == 2024) & 
+notas_ano_vigente = notas[(notas['anoletivo'] == 2025) & 
                           (notas['rm'].isin(lista_rm)) & 
                           (notas['turma'].isin(lista_turmas))]
 notas_ano_vigente.to_csv('notas_ano_vigente.csv', sep=';', encoding = 'iso-8859-1', index = False)
@@ -176,7 +176,8 @@ except:
 try:
     hisEgeo_etapa1 = df_notas_trim[
         (df_notas_trim['disciplina'] == 'HISTÓRIA/GEOGRAFIA') & 
-        ((df_notas_trim['curso'] == '3° ANO EF'))]
+        ((df_notas_trim['curso'] == '3° ANO EF') | 
+         (df_notas_trim['curso'] == '4° ANO EF'))]
     hisEgeo_etapa1 = hisEgeo_etapa1[['rm', 'nome', 'turma', 'disciplina','bimestre','AA1', 'DE', 'TE']]
     hisEgeo_etapa1['media'] = ((hisEgeo_etapa1['AA1'] + hisEgeo_etapa1['DE'] + 
                                 hisEgeo_etapa1['TE'])/2).round(2)
@@ -309,7 +310,7 @@ medias_boletim['mediaparcial'] = medias_boletim['mediaparcial'].astype(float)
 
 medias_boletim.to_csv('medias_v2.csv', sep=';', encoding = 'iso-8859-1', index = False)
 
-medias = medias_boletim[medias_boletim["anoletivo"]==2024]
+medias = medias_boletim[medias_boletim["anoletivo"]==2025]
 
 turmas_descricao = df_notas_trim[['rm', 'turma']].drop_duplicates()
 
@@ -345,9 +346,6 @@ colunas_usadas = ['rm', 'nome_x', 'turma_x','disciplina', 'trimestre', 'media', 
 medias_notas_processo = medias_notas.merge(analise_rec, on=['rm', 'disciplina'], how='inner')
 medias_notas_processo.to_csv('notas.csv', sep=';', encoding = 'iso-8859-1', index = False)
 
-medias_notas_processo = medias_notas_processo[colunas_usadas]
-
-
 # BARRA DE FILTROS PRINCIPAIS
 with st.sidebar:
     turma = st.multiselect(
@@ -361,31 +359,55 @@ with st.sidebar:
     )
 
 #VERIFICA NOTAS FALTANTES
-vazio = medias_notas_processo[medias_notas_processo['media'].isna()]
-vazio = vazio[(vazio['turma_x'].isin(turma)) & 
-              (vazio['trimestre'].isin(trimestre))].sort_values(by=['turma_x','disciplina','nome_x'])
-vazio = vazio.rename(columns=
-                     {'nome_x': 'Nome',
-                     'turma_x': 'Turma',
-                     'disciplina': 'Disciplina'}
-                    )
-qtd_alunos = len(vazio['rm'].unique())
-qtd_disciplinas = len(vazio['Disciplina'].unique())
-if len(vazio) > 0:
-    st.html(f'<p>Há <b>{qtd_alunos} aluno(s)</b> com alguma nota sem digitar em <b>{qtd_disciplinas} disciplina(s)</b></p>')
-    st.dataframe(vazio[['Nome','Turma', 'Disciplina', 'trimestre']], hide_index=True, width=700)
+# alunos sem nenhuma nota digitada
+try:
+    resultados = []
+    for turma_selecionada in turma:
+        notas_turma = medias_notas_processo[medias_notas_processo['turma_x'] == turma_selecionada]
+        disciplinas_turma = notas_turma['disciplina'].unique().tolist()
+        
+        disciplinas_por_aluno = notas_turma.groupby(['rm', 'nome_x', 'turma_x', 'trimestre'])['disciplina'].apply(set).reset_index()
 
-# nota_TE = round(medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
-#                                 (medias_notas_processo['turma_x'].isin(turma))]['TE'].mode(),2)
-# nota_AA1 = nota_TE = round(medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
-#                                 (medias_cd dadonotas_processo['turma_x'].isin(turma))]['AA1'].mode(),2)
+        def disciplinas_faltando(recebidas):
+            return list(set(disciplinas_turma) - recebidas)    
+        
+        disciplinas_por_aluno['disciplinas_faltando'] = disciplinas_por_aluno['disciplina'].apply(disciplinas_faltando)
 
-# a = medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
-#                                 (medias_notas_processo['turma_x'].isin(turma))]['TE'].mode()
-# a
-# b = medias_notas_processo[(medias_notas_processo['trimestre'].isin(trimestre)) &
-#                                 (medias_notas_processo['turma_x'].isin(turma))]['AA1'].mode()
-# b
+        faltando = disciplinas_por_aluno.explode('disciplinas_faltando')
+        faltando = faltando[faltando['disciplinas_faltando'].notna()]
+
+        resultado = faltando[['rm','nome_x', 'turma_x', 'disciplinas_faltando', 'trimestre']]
+        resultados.append(resultado)
+
+    resultado_final = pd.concat(resultados, ignore_index=True)
+    resultado_final = resultado_final.rename(columns=
+                                            {
+                                                'nome_x':'Nome',
+                                                'turma_x':'Turma',
+                                                'disciplinas_faltando':'Disciplina'
+                                            }
+                                            )
+    #alunos com alguma nota faltando
+    vazio = medias_notas_processo[medias_notas_processo['media'].isna()]
+    vazio = vazio[(vazio['turma_x'].isin(turma)) & 
+                (vazio['trimestre'].isin(trimestre))].sort_values(by=['turma_x','disciplina','nome_x'])
+    vazio = vazio.rename(columns=
+                        {'nome_x': 'Nome',
+                        'turma_x': 'Turma',
+                        'disciplina': 'Disciplina'}
+                        )
+    vazio = vazio[['rm', 'Nome', 'Turma', 'Disciplina', 'trimestre']]
+
+    #concatenação das tabelas
+    concate_sem_nota_parcial_total = pd.concat([vazio, resultado_final])
+    concate_sem_nota_parcial_total = concate_sem_nota_parcial_total.sort_values(['Turma', 'Nome', 'Disciplina']) 
+    qtd_alunos = len(concate_sem_nota_parcial_total['rm'].unique())
+    qtd_disciplinas = len(concate_sem_nota_parcial_total['Disciplina'].unique())
+    if len(concate_sem_nota_parcial_total) > 0:
+        st.html(f'<p>Há <b>{qtd_alunos} aluno(s)</b> com alguma nota sem digitar em <b>{qtd_disciplinas} disciplina(s)</b></p>')
+        st.dataframe(concate_sem_nota_parcial_total[['Nome','Turma', 'Disciplina', 'trimestre']], hide_index=True, width=700)
+except ValueError as e:
+    st.write(f'[ERRO] - > {e}. Selecione turma e trimestre.')    
 
 
 selecao = medias_notas_processo[(medias_notas_processo['turma_x'].isin(turma)) & 
@@ -414,9 +436,10 @@ rec_vazia = rec_vazia.rename(columns=colunas)
 
 rec_vazia = rec_vazia.sort_values(by=['Trimestre','Turma', 'Nome', 'Disciplina'])
 
-if (len(rec_vazia) > 0):
-    st.html('<h3>Alunos com REC em aberto</h3>')
-    st.dataframe(rec_vazia[['Nome', 'Turma', 'Disciplina', 'Trimestre']], hide_index=True, width=700)
+
+# if (len(rec_vazia) > 0):
+#     st.html('<h3>Alunos com REC em aberto</h3>')
+#     st.dataframe(rec_vazia[['Nome', 'Turma', 'Disciplina', 'Trimestre']], hide_index=True, width=700)
 
 #função gera nova média
 def gera_nova_media(selecao):
