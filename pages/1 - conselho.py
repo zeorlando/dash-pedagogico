@@ -1,10 +1,14 @@
-import streamlit as st
+import datetime
 import pandas as pd
 import plotly.express as px
+import streamlit as st
 
 from st_aggrid import AgGrid, JsCode
 
 col1, col2, col3, col4 = st.columns(4, gap='large')
+
+data_vigente = datetime.date.today()
+ano_vigente = data_vigente.year
 
 # AJUSTES DAS TABELAS
 alunos = pd.read_csv('alunos.csv', sep=';', encoding = 'iso-8859-1')
@@ -15,7 +19,7 @@ alunos['anoletivo'] = alunos['anoletivo'].astype(int)
 alunos = alunos[['rm','nome', 'idturma','status', 'situacaoturma', 'anoletivo']]
 alunos = alunos[(alunos['status'] == 'A') & 
                 (alunos['situacaoturma'] == 'A') & 
-                (alunos['anoletivo'] == 2025)]
+                (alunos['anoletivo'] == ano_vigente)]
 lista_rm = alunos['rm'].unique().tolist()
 
 turmas = pd.read_csv('turmas.csv', sep=";", encoding='iso-8859-1')
@@ -24,7 +28,7 @@ turmas['anoletivo'] = turmas['anoletivo'].astype(int)
 
 tab_turmas_alunos = pd.merge(alunos, turmas, how='inner', on='idturma')
 tab_turmas_alunos.rename(columns={'descrturma':'turma'}, inplace=True)
-tab_turmas_alunos = tab_turmas_alunos[(tab_turmas_alunos['anoletivo_x'] == 2025) &
+tab_turmas_alunos = tab_turmas_alunos[(tab_turmas_alunos['anoletivo_x'] == ano_vigente) &
                                       (tab_turmas_alunos['status'] == 'A') &
                                       (tab_turmas_alunos['situacaoturma'] == 'A')]
 lista_turmas = tab_turmas_alunos['turma'].unique().tolist()
@@ -32,7 +36,7 @@ lista_turmas = tab_turmas_alunos['turma'].unique().tolist()
 notas = pd.read_csv('notas_atividades.csv', sep=';', encoding = 'iso-8859-1')
 notas['rm'] = notas['rm'].astype(int)
 notas['anoletivo'] = notas['anoletivo'].astype(int)
-notas_ano_vigente = notas[(notas['anoletivo'] == 2025) & 
+notas_ano_vigente = notas[(notas['anoletivo'] == ano_vigente) & 
                           (notas['rm'].isin(lista_rm)) & 
                           (notas['turma'].isin(lista_turmas))]
 notas_ano_vigente.to_csv('notas_ano_vigente.csv', sep=';', encoding = 'iso-8859-1', index = False)
@@ -310,7 +314,7 @@ medias_boletim['mediaparcial'] = medias_boletim['mediaparcial'].astype(float)
 
 medias_boletim.to_csv('medias_v2.csv', sep=';', encoding = 'iso-8859-1', index = False)
 
-medias = medias_boletim[medias_boletim["anoletivo"]==2025]
+medias = medias_boletim[medias_boletim["anoletivo"]==ano_vigente]
 
 turmas_descricao = df_notas_trim[['rm', 'turma']].drop_duplicates()
 
